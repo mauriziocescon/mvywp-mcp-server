@@ -5,7 +5,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-const I18N_PATH = path.join(process.cwd(), 'assets', 'i18n');
+const I18N_PATH = path.join(process.cwd(), 'src', 'assets', 'i18n');
 
 // 1. Initialize the server
 const server = new Server(
