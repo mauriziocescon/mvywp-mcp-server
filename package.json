@@ -1,0 +1,31 @@
+{
+  "name": "mywp-mcp-server",
+  "version": "1.0.0",
+  "description": "A demo mcp server for mywp",
+  "author": "Maurizio Cescon <maurizio.cescon@gmail.com>",
+  "homepage": "https://be.linkedin.com/in/mauriziocescon",
+  "private": true,
+  "packageManager": "npm@11.6.2",
+  "engines": {
+    "node": ">=20.10.0",
+    "npm": ">=10.2.3"
+  },
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mauriziocescon/mywp-mcp-server"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/brentertz/scapegoat/blob/master/LICENSE-MIT"
+    }
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3"
+  }
+}
