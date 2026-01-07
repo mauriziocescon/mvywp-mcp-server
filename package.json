@@ -5,12 +5,16 @@
   "author": "Maurizio Cescon <maurizio.cescon@gmail.com>",
   "homepage": "https://be.linkedin.com/in/mauriziocescon",
   "private": true,
+  "type": "module",
   "packageManager": "npm@11.6.2",
   "engines": {
     "node": ">=20.10.0",
     "npm": ">=10.2.3"
   },
   "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "tsc --watch"
   },
   "repository": {
     "type": "git",
@@ -26,6 +30,7 @@
     "@modelcontextprotocol/sdk": "^1.25.2"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3"
+    "@types/node": "^25.0.3",
+    "typescript": "^5.0.0"
   }
 }
