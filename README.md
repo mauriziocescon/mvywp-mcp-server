@@ -1,0 +1,1 @@
+# Mywp mcp server
