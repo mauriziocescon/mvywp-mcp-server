@@ -1,1 +1,3 @@
 # Mywp mcp server
+
+Test
