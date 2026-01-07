@@ -1,3 +1,6 @@
 # Mywp mcp server
 
-Test
+Test:
+
+- `npm run build`
+- `npx @modelcontextprotocol/inspector node build/index.js`
