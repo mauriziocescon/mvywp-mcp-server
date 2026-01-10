@@ -59,15 +59,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   if (request.params.name === 'update_dependencies') {
     const projectPath = request.params.arguments?.projectPath as string;
+
+    // Check if the client provided a progress token
+    const progressToken = request.params._meta?.progressToken;
+
     return updateDependencies(projectPath, (chunk: string) => {
-      // Send progress notification to the client
-      server.notification({
-        method: 'notifications/progress',
-        params: {
-          progressToken: request.params._meta?.progressToken,
-          progress: chunk,
-        },
-      });
+      if (progressToken !== undefined) {
+        server.notification({
+          method: 'notifications/progress',
+          params: {
+            progressToken,
+            progress: 0, // You can calculate percentage if known
+            description: chunk.trim(), // This sends the text
+          },
+        });
+      }
     });
   }
 
