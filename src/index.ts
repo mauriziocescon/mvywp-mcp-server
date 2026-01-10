@@ -10,7 +10,7 @@ const I18N_PATH = path.join(process.cwd(), 'src', 'assets', 'i18n');
 // 1. Initialize the server
 const server = new Server(
   {
-    name: 'my-automation-server',
+    name: 'mywp-automation-server',
     version: '1.0.0',
   },
   {
@@ -44,8 +44,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === 'validate_translations') {
     const fileContent = request.params.arguments?.fileContent as string;
 
-    // 1. Find all 'cc.**' | translate patterns
-    const keyRegex = /'(cc\.[^']+)'\s*\|\s*translate/g;
+    // 1. Find all '**' | translate patterns
+    const keyRegex = /'([^']+)'\s*\|\s*translate/g;
     const foundKeys = [...new Set([...fileContent.matchAll(keyRegex)].map(match => match[1]))];
 
     if (foundKeys.length === 0) {
