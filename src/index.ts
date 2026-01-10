@@ -25,7 +25,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: 'setup_environment_for_participants',
-        description: 'Init some required packages for developing participants by running init for cc-participants-ui and cc-shared-ui command. Use when user asks to setup the environment to develop participants.',
+        description: 'Init some required packages for developing participants by running the init command for cc-shared-ui, cc-participants-ui and cc-task-details-ui. Use when user asks to setup the environment to develop participants.',
         inputSchema: {
           type: 'object',
           properties: {
