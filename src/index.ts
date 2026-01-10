@@ -9,7 +9,7 @@ import { validateTranslations } from './validate_translations.js';
 // 1. Initialize the server
 const server = new Server(
   {
-    name: 'mywp-automation-server',
+    name: 'mywp-mcp-server',
     version: '1.0.0',
   },
   {
