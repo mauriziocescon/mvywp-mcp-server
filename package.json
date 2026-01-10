@@ -1,10 +1,10 @@
 {
   "name": "mywp-mcp-server",
   "version": "1.0.0",
-  "description": "A demo mcp server for mywp",
+  "description": "An mcp server for mywp",
   "author": "Maurizio Cescon <maurizio.cescon@gmail.com>",
   "homepage": "https://be.linkedin.com/in/mauriziocescon",
-  "private": true,
+  "private": false,
   "type": "module",
   "packageManager": "npm@11.6.2",
   "engines": {
