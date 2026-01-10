@@ -5,7 +5,40 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-const I18N_PATH = path.join(process.cwd(), 'src', 'assets', 'i18n');
+/**
+ * Searches for the closest assets/i18n/ folder starting from the given file path
+ * and moving up the directory tree until found or reaching the root.
+ */
+async function findClosestI18nPath(filePath: string): Promise<string | null> {
+  let currentDir = path.dirname(filePath);
+  const root = path.parse(currentDir).root;
+
+  while (currentDir !== root) {
+    const i18nPath = path.join(currentDir, 'assets', 'i18n');
+    try {
+      const stats = await fs.stat(i18nPath);
+      if (stats.isDirectory()) {
+        return i18nPath;
+      }
+    } catch {
+      // Directory doesn't exist, continue
+    }
+    currentDir = path.dirname(currentDir);
+  }
+
+  // Check root level as well
+  const rootI18nPath = path.join(root, 'assets', 'i18n');
+  try {
+    const stats = await fs.stat(rootI18nPath);
+    if (stats.isDirectory()) {
+      return rootI18nPath;
+    }
+  } catch {
+    // Not found
+  }
+
+  return null;
+}
 
 // 1. Initialize the server
 const server = new Server(
@@ -31,8 +64,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: 'object',
           properties: {
             fileContent: { type: 'string', description: 'The content of the file to scan for translation keys' },
+            filePath: { type: 'string', description: 'The absolute path of the file being validated' },
           },
-          required: ['fileContent'],
+          required: ['fileContent', 'filePath'],
         },
       },
     ],
@@ -43,22 +77,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === 'validate_translations') {
     const fileContent = request.params.arguments?.fileContent as string;
+    const filePath = request.params.arguments?.filePath as string;
 
     // 1. Find all '**' | translate patterns
     const keyRegex = /'([^']+)'\s*\|\s*translate/g;
     const foundKeys = [...new Set([...fileContent.matchAll(keyRegex)].map(match => match[1]))];
 
     if (foundKeys.length === 0) {
-      return { content: [{ type: 'text', text: 'No "cc.**" translation keys found in the provided content.' }] };
+      return { content: [{ type: 'text', text: 'No translation keys found in the provided content.' }] };
+    }
+
+    // 2. Find the closest assets/i18n/ folder
+    const i18nPath = await findClosestI18nPath(filePath);
+    if (!i18nPath) {
+      return {
+        content: [{
+          type: 'text',
+          text: `Error: Could not find 'assets/i18n/' folder in any parent directory of ${filePath}`
+        }],
+      };
     }
 
     try {
-      // 2. Read all language files
-      const files = (await fs.readdir(I18N_PATH)).filter(f => f.endsWith('.json'));
+      // 3. Read all language files
+      const files = (await fs.readdir(i18nPath)).filter(f => f.endsWith('.json'));
       const results: Record<string, string[]> = {}; // key -> missing languages
 
       for (const file of files) {
-        const langPath = path.join(I18N_PATH, file);
+        const langPath = path.join(i18nPath, file);
         const translations = JSON.parse(await fs.readFile(langPath, 'utf-8'));
 
         for (const key of foundKeys) {
@@ -69,12 +115,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
       }
 
-      // 3. Format result
+      // 4. Format result
       if (Object.keys(results).length === 0) {
         return {
           content: [{
             type: 'text',
-            text: `Success! All ${foundKeys.length} keys found are present in all language files.`,
+            text: `Success! All ${foundKeys.length} keys found are present in all language files.\n(Using i18n folder: ${i18nPath})`,
           }],
         };
       }
@@ -84,11 +130,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         .join('\n');
 
       return {
-        content: [{ type: 'text', text: `Found ${foundKeys.length} keys. Some are missing:\n\n${report}` }],
+        content: [{
+          type: 'text',
+          text: `Found ${foundKeys.length} keys. Some are missing:\n\n${report}\n\n(Using i18n folder: ${i18nPath})`
+        }],
       };
     } catch (error: any) {
       return {
-        content: [{ type: 'text', text: `Error reading i18n files: ${error.message}. Ensure 'assets/i18n/' exists.` }],
+        content: [{ type: 'text', text: `Error reading i18n files from ${i18nPath}: ${error.message}` }],
       };
     }
   }
