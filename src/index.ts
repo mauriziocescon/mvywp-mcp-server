@@ -64,7 +64,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 // 3. Implement the tool logic
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
-  if (request.params.name === 'setup_participants') {
+  if (request.params.name === 'setup_environment_for_participants') {
     const projectPath = request.params.arguments?.projectPath as string;
 
     // Check if the client provided a progress token
