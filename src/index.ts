@@ -59,7 +59,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   if (request.params.name === 'update_dependencies') {
     const projectPath = request.params.arguments?.projectPath as string;
-    return updateDependencies(projectPath);
+    return updateDependencies(projectPath, (chunk: string) => {
+      // Send progress notification to the client
+      server.notification({
+        method: 'notifications/progress',
+        params: {
+          progressToken: request.params._meta?.progressToken,
+          progress: chunk,
+        },
+      });
+    });
   }
 
   throw new Error('Tool not found');
