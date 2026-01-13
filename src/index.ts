@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { basename, extname, join } from 'node:path';
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -72,27 +72,45 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 // 3. Define available resources (markdown documentation files)
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
-  return {
-    resources: [
-      {
-        uri: 'file:///docs/participants.md',
-        name: 'Participants Documentation',
-        description: 'Documentation about participants development',
+  try {
+    const resourcesPath = join(process.cwd(), 'src', 'resources');
+    const files = await readdir(resourcesPath);
+
+    // Filter for markdown files only
+    const mdFiles = files.filter(file => extname(file).toLowerCase() === '.md');
+
+    return {
+      resources: mdFiles.map(file => ({
+        uri: `file:///resources/${file}`,
+        name: basename(file, '.md'), // Use filename as resource name
+        description: `Documentation file: ${file}`,
         mimeType: 'text/markdown',
-      },
-    ],
-  };
+      })),
+    };
+  } catch (error) {
+    // Return empty list if directory is missing or inaccessible
+    return { resources: [] };
+  }
 });
 
 // 4. Implement resource reading logic
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const uri = request.params.uri;
+  const resourcePrefix = 'file:///resources/';
 
-  if (uri === 'file:///docs/participants.md') {
+  if (uri.startsWith(resourcePrefix)) {
+    // Extract filename from URI
+    const fileName = uri.slice(resourcePrefix.length);
+
+    // Security check: prevent directory traversal
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      throw new Error(`Invalid resource path: ${uri}`);
+    }
+
     try {
-      // Read the markdown file from the docs directory
-      const docsPath = join(process.cwd(), 'docs', 'participants.md');
-      const content = await readFile(docsPath, 'utf-8');
+      const resourcesPath = join(process.cwd(), 'src', 'resources');
+      const filePath = join(resourcesPath, fileName);
+      const content = await readFile(filePath, 'utf-8');
 
       return {
         contents: [
@@ -113,45 +131,30 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 
 // 5. Implement the tool logic
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const progressToken = request.params._meta?.progressToken;
+
+  // Create a reusable progress callback if a token is provided
+  const onProgress = progressToken !== undefined
+    ? (chunk: string) => {
+      server.notification({
+        method: 'notifications/progress',
+        params: {
+          progressToken,
+          progress: 0, // You can calculate percentage if known
+          description: chunk.trim(), // This sends the text
+        },
+      });
+    }
+    : undefined;
 
   if (request.params.name === 'setup_environment_for_participants') {
     const projectPath = request.params.arguments?.projectPath as string;
-
-    // Check if the client provided a progress token
-    const progressToken = request.params._meta?.progressToken;
-
-    return setupEnvironmentForParticipants(projectPath, (chunk: string) => {
-      if (progressToken !== undefined) {
-        server.notification({
-          method: 'notifications/progress',
-          params: {
-            progressToken,
-            progress: 0, // You can calculate percentage if known
-            description: chunk.trim(), // This sends the text
-          },
-        });
-      }
-    });
+    return setupEnvironmentForParticipants(projectPath, onProgress);
   }
 
   if (request.params.name === 'update_dependencies') {
     const projectPath = request.params.arguments?.projectPath as string;
-
-    // Check if the client provided a progress token
-    const progressToken = request.params._meta?.progressToken;
-
-    return updateDependencies(projectPath, (chunk: string) => {
-      if (progressToken !== undefined) {
-        server.notification({
-          method: 'notifications/progress',
-          params: {
-            progressToken,
-            progress: 0, // You can calculate percentage if known
-            description: chunk.trim(), // This sends the text
-          },
-        });
-      }
-    });
+    return updateDependencies(projectPath, onProgress);
   }
 
   if (request.params.name === 'validate_translations') {
