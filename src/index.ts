@@ -1,6 +1,14 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CallToolRequestSchema,
+  ListResourcesRequestSchema,
+  ListToolsRequestSchema,
+  ReadResourceRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 
 import { setupEnvironmentForParticipants } from './setup_environment_for_participants.js';
 import { updateDependencies } from './update_dependencies.js';
@@ -15,6 +23,7 @@ const server = new Server(
   {
     capabilities: {
       tools: {}, // Enable tools capability
+      resources: {}, // Enable resources capability
     },
   },
 );
@@ -61,7 +70,48 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
-// 3. Implement the tool logic
+// 3. Define available resources (markdown documentation files)
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+  return {
+    resources: [
+      {
+        uri: 'file:///docs/participants.md',
+        name: 'Participants Documentation',
+        description: 'Documentation about participants development',
+        mimeType: 'text/markdown',
+      },
+    ],
+  };
+});
+
+// 4. Implement resource reading logic
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  const uri = request.params.uri;
+
+  if (uri === 'file:///docs/participants.md') {
+    try {
+      // Read the markdown file from the docs directory
+      const docsPath = join(process.cwd(), 'docs', 'participants.md');
+      const content = await readFile(docsPath, 'utf-8');
+
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'text/markdown',
+            text: content,
+          },
+        ],
+      };
+    } catch (error) {
+      throw new Error(`Failed to read resource: ${error}`);
+    }
+  }
+
+  throw new Error(`Resource not found: ${uri}`);
+});
+
+// 5. Implement the tool logic
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   if (request.params.name === 'setup_environment_for_participants') {
@@ -113,6 +163,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   throw new Error('Tool not found');
 });
 
-// 4. Start the server using Standard Input/Output (stdio)
+// 6. Start the server using Standard Input/Output (stdio)
 const transport = new StdioServerTransport();
 await server.connect(transport);
