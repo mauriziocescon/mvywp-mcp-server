@@ -1,5 +1,5 @@
-import { readdir, readFile } from 'node:fs/promises';
-import { basename, extname, join } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -85,19 +85,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 // 3. Define available resources (markdown documentation files)
 server.setRequestHandler(ListResourcesRequestSchema, async () => {
   try {
-    const resourcesPath = join(process.cwd(), 'src', 'resources');
-    const files = await readdir(resourcesPath);
-
-    // Filter for markdown files only
-    const mdFiles = files.filter(file => extname(file).toLowerCase() === '.md');
-
     return {
-      resources: mdFiles.map(file => ({
-        uri: `docs:///resources/${file}`,
-        name: basename(file, '.md'), // Use filename as resource name
-        description: `Documentation file: ${file}`,
+      resources: [{
+        uri: `docs:///resources/participants.md`,
+        name: 'participants.md', // Use filename as resource name
+        description: `Describes what a participant is all about and how to its configuration looks like. It also clarifies the role of participants in the task flow and their interaction with the task container.`,
         mimeType: 'text/markdown',
-      })),
+      }],
     };
   } catch (error) {
     // Return empty list if directory is missing or inaccessible
