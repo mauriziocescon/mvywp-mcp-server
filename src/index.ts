@@ -117,7 +117,7 @@ server.registerResource(
   'Participants',
   'docs:///resources/participants.md',
   {
-    description: 'Describes what a participant is all about and how to its configuration looks like. It also clarifies the role of participants in the task flow and their interaction with the task container.',
+    description: `Describes what a participant is all about and how to its configuration looks like. It also clarifies the role of participants in the task flow and their interaction with the task container.`,
     mimeType: 'text/markdown',
   },
   async (uri) => {
