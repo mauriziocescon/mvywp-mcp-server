@@ -34,11 +34,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: 'setup_environment_for_participants',
-        description: 'Init some required packages for developing participants by running the init command for cc-shared-ui, cc-participants-ui and cc-task-details-ui. Use when user asks to setup the environment to develop participants.',
+        description: 'Init some required packages for locally developing participants by running the init command for cc-shared-ui, cc-participants-ui and cc-task-details-ui. Use when user asks to setup the environment to develop participants.',
         inputSchema: {
           type: 'object',
           properties: {
-            projectPath: { type: 'string', description: 'The absolute path to the project root directory' },
+            projectPath: {
+              type: 'string',
+              description: 'The absolute path to the project root directory',
+            },
           },
           required: ['projectPath'],
         },
@@ -49,7 +52,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: 'object',
           properties: {
-            projectPath: { type: 'string', description: 'The absolute path to the project root directory' },
+            projectPath: {
+              type: 'string',
+              description: 'The absolute path to the project root directory',
+            },
           },
           required: ['projectPath'],
         },
@@ -60,8 +66,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: 'object',
           properties: {
-            fileContent: { type: 'string', description: 'The content of the file to scan for translation keys' },
-            filePath: { type: 'string', description: 'The absolute path of the file being validated' },
+            fileContent: {
+              type: 'string',
+              description: 'The content of the file to scan for translation keys',
+            },
+            filePath: {
+              type: 'string',
+              description: 'The absolute path of the file being validated',
+            },
           },
           required: ['fileContent', 'filePath'],
         },
