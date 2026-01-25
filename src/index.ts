@@ -17,7 +17,7 @@ import { validateTranslations } from './validate_translations.js';
 // 1. Initialize the server
 const server = new Server(
   {
-    name: 'mywp-mcp-server',
+    name: 'participants-mcp-server',
     version: '1.0.0',
   },
   {
@@ -88,7 +88,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
     return {
       resources: [{
         uri: `docs:///resources/participants.md`,
-        name: 'participants.md', // Use filename as resource name
+        name: 'Participants', // Use filename as resource name
         description: `Describes what a participant is all about and how to its configuration looks like. It also clarifies the role of participants in the task flow and their interaction with the task container.`,
         mimeType: 'text/markdown',
       }],
