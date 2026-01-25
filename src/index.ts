@@ -14,6 +14,9 @@ import { setupEnvironmentForParticipants } from './setup_environment_for_partici
 import { updateDependencies } from './update_dependencies.js';
 import { validateTranslations } from './validate_translations.js';
 
+// Enhanced progress callback type
+type ProgressCallback = (message: string, currentStep?: number, totalSteps?: number) => void;
+
 // 1. Initialize the server
 const server = new Server(
   {
@@ -139,15 +142,16 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const progressToken = request.params._meta?.progressToken;
 
-  // Create a reusable progress callback if a token is provided
-  const onProgress = progressToken !== undefined
-    ? (chunk: string) => {
+  // Create enhanced progress callback
+  const onProgress: ProgressCallback | undefined = progressToken !== undefined
+    ? (message: string, currentStep?: number, totalSteps?: number) => {
+      const progress = currentStep && totalSteps ? Math.round((currentStep / totalSteps) * 100) : undefined;
       server.notification({
         method: 'notifications/progress',
         params: {
           progressToken,
-          progress: 0, // You can calculate percentage if known
-          description: chunk.trim(), // This sends the text
+          progress,
+          description: message.trim(),
         },
       });
     }
@@ -166,7 +170,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === 'validate_translations') {
     const fileContent = request.params.arguments?.fileContent as string;
     const filePath = request.params.arguments?.filePath as string;
-    return validateTranslations(fileContent, filePath);
+    return validateTranslations(fileContent, filePath, onProgress);
   }
 
   throw new Error('Tool not found');

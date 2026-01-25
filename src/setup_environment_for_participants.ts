@@ -1,12 +1,17 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 
+// Enhanced progress callback type
+type ProgressCallback = (message: string, currentStep?: number, totalSteps?: number) => void;
+
 // Helper to run a command and capture output
 function runCommand(
   command: string,
   args: string[],
   cwd: string,
-  onProgress?: (chunk: string) => void,
+  onProgress?: ProgressCallback,
+  currentStep?: number,
+  totalSteps?: number,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -20,7 +25,7 @@ function runCommand(
       const chunk = data.toString();
       output += chunk;
       if (onProgress) {
-        onProgress(chunk);
+        onProgress(chunk, currentStep, totalSteps);
       }
     });
 
@@ -28,7 +33,7 @@ function runCommand(
       const chunk = data.toString();
       output += chunk;
       if (onProgress) {
-        onProgress(chunk);
+        onProgress(chunk, currentStep, totalSteps);
       }
     });
 
@@ -48,52 +53,60 @@ function runCommand(
 
 export async function setupEnvironmentForParticipants(
   projectPath: string,
-  onProgress?: (chunk: string) => void,
+  onProgress?: ProgressCallback,
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
   try {
     // Verify the project path exists
+    if (onProgress) onProgress('🔍 Verifying project path...', 0, 4);
     await fs.access(projectPath);
 
     let allOutput = '';
+    const totalSteps = 4;
 
-    // 1. Run init for cc-participants-ui
+    // Step 1: cc-participants-ui
     const args1 = ['run', 'init', '--', '--pkg', 'cc-participants-ui', '--pkgOnly', '--git', 'local', '--skipInstall'];
-    const msg1 = `Running: npm ${args1.join(' ')}\n`;
-    if (onProgress) onProgress(msg1);
-    allOutput += msg1;
+    const msg1 = `🚀 [1/3] Setting up cc-participants-ui...`;
+    if (onProgress) onProgress(msg1, 1, totalSteps);
+    allOutput += msg1 + '\n';
 
-    allOutput += await runCommand('npm', args1, projectPath, onProgress);
+    allOutput += await runCommand('npm', args1, projectPath, onProgress, 1, totalSteps);
     allOutput += '\n\n';
 
-    // 2. Run init for cc-shared-ui
+    // Step 2: cc-shared-ui
     const args2 = ['run', 'init', '--', '--pkg', 'cc-shared-ui', '--pkgOnly', '--git', 'local', '--skipInstall'];
-    const msg2 = `Running: npm ${args2.join(' ')}\n`;
-    if (onProgress) onProgress(msg2);
-    allOutput += msg2;
+    const msg2 = `🚀 [2/3] Setting up cc-shared-ui...`;
+    if (onProgress) onProgress(msg2, 2, totalSteps);
+    allOutput += msg2 + '\n';
 
-    allOutput += await runCommand('npm', args2, projectPath, onProgress);
+    allOutput += await runCommand('npm', args2, projectPath, onProgress, 2, totalSteps);
+    allOutput += '\n\n';
 
-    // 3. Run init for cc-task-details-ui
+    // Step 3: cc-task-details-ui
     const args3 = ['run', 'init', '--', '--pkg', 'cc-task-details-ui', '--pkgOnly', '--git', 'local', '--skipInstall'];
-    const msg3 = `Running: npm ${args3.join(' ')}\n`;
-    if (onProgress) onProgress(msg3);
-    allOutput += msg3;
+    const msg3 = `🚀 [3/3] Setting up cc-task-details-ui...`;
+    if (onProgress) onProgress(msg3, 3, totalSteps);
+    allOutput += msg3 + '\n';
 
-    allOutput += await runCommand('npm', args3, projectPath, onProgress);
+    allOutput += await runCommand('npm', args3, projectPath, onProgress, 3, totalSteps);
+
+    // Final step
+    if (onProgress) onProgress('✅ Setup completed successfully!', 4, totalSteps);
 
     return {
       content: [{
         type: 'text',
-        text: `Successfully executed setup participants scripts in ${projectPath}\n\n${allOutput}`,
+        text: `✅ Successfully executed setup participants scripts in ${projectPath}\n\n${allOutput}`,
       }],
     };
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    if (onProgress) onProgress(`❌ Error: ${errorMessage}`);
+
     return {
       content: [{
         type: 'text',
-        text: `Error running setup participants: ${errorMessage}`,
+        text: `❌ Error running setup participants: ${errorMessage}`,
       }],
     };
   }
