@@ -3,10 +3,6 @@ import { join } from 'node:path';
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
 import { setupEnvironmentForParticipants } from './setup_environment_for_participants.js';
@@ -116,59 +112,49 @@ server.registerTool(
   },
 );
 
-// 3. Define available resources (markdown documentation files)
-server.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-  try {
-    return {
-      resources: [{
-        uri: `docs:///resources/participants.md`,
-        name: 'Participants', // Use filename as resource name
-        description: `Describes what a participant is all about and how to its configuration looks like. It also clarifies the role of participants in the task flow and their interaction with the task container.`,
-        mimeType: 'text/markdown',
-      }],
-    };
-  } catch (error) {
-    // Return empty list if directory is missing or inaccessible
-    return { resources: [] };
-  }
-});
+// 3. Register resources using the registerResource API
+server.registerResource(
+  'Participants',
+  'docs:///resources/participants.md',
+  {
+    description: 'Describes what a participant is all about and how to its configuration looks like. It also clarifies the role of participants in the task flow and their interaction with the task container.',
+    mimeType: 'text/markdown',
+  },
+  async (uri) => {
+    const resourcePrefix = 'docs:///resources/';
 
-// 4. Implement resource reading logic
-server.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-  const uri = request.params.uri;
-  const resourcePrefix = 'docs:///resources/';
+    if (uri.pathname.startsWith(resourcePrefix)) {
+      // Extract filename from URI
+      const fileName = uri.pathname.slice(resourcePrefix.length);
 
-  if (uri.startsWith(resourcePrefix)) {
-    // Extract filename from URI
-    const fileName = uri.slice(resourcePrefix.length);
+      // Security check: prevent directory traversal
+      if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+        throw new Error(`Invalid resource path: ${uri.pathname}`);
+      }
 
-    // Security check: prevent directory traversal
-    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
-      throw new Error(`Invalid resource path: ${uri}`);
+      try {
+        const resourcesPath = join(process.cwd(), 'src', 'resources');
+        const filePath = join(resourcesPath, fileName);
+        const content = await readFile(filePath, 'utf-8');
+
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              mimeType: 'text/markdown',
+              text: content,
+            },
+          ],
+        };
+      } catch (error) {
+        throw new Error(`Failed to read resource: ${error}`);
+      }
     }
 
-    try {
-      const resourcesPath = join(process.cwd(), 'src', 'resources');
-      const filePath = join(resourcesPath, fileName);
-      const content = await readFile(filePath, 'utf-8');
+    throw new Error(`Resource not found: ${uri.pathname}`);
+  },
+);
 
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: 'text/markdown',
-            text: content,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(`Failed to read resource: ${error}`);
-    }
-  }
-
-  throw new Error(`Resource not found: ${uri}`);
-});
-
-// 5. Start the server using Standard Input/Output (stdio)
+// 4. Start the server using Standard Input/Output (stdio)
 const transport = new StdioServerTransport();
 await server.connect(transport);
