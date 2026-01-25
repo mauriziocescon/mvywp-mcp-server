@@ -5,7 +5,7 @@ At frontend level, the task detail screen is made by several "cells" called bloc
 In general, a block is any ng-component encapsulating some reusable logic that can be instantiated programmatically in a dynamic way.
 Blocks represent visual components that can be either of predefined `known` type, like `infoHeader`, `tabs`, `nextStep` etc. or represent components custom developed by business process developers.
 Such custom developed blocks can act as independent participants having their own micro-service backend and through that they can communicate with the task container (affecting the validity of a task, the selected outcome, ...).
-Any sort of communication between blocks at ui level is not allowed. Some participant micro-services are already provided like actionList, documentList, and internalCommunication.
+Any sort of communication between blocks at ui level is not allowed. Some participant micro-services are already provided like `actionList`, `documentList`, and `internalCommunication`.
 
 Blocks for a specific task are configured in the TaskConfiguration.json matching the task definition metadata. Below you can see an example for the task-detail of the screenshot: each block carries a type and (typically) some optional configuration items, depending on the block type.
 
