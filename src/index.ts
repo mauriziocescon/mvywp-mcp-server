@@ -81,7 +81,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
 
     return {
       resources: mdFiles.map(file => ({
-        uri: `file:///resources/${file}`,
+        uri: `docs:///resources/${file}`,
         name: basename(file, '.md'), // Use filename as resource name
         description: `Documentation file: ${file}`,
         mimeType: 'text/markdown',
@@ -96,7 +96,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
 // 4. Implement resource reading logic
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const uri = request.params.uri;
-  const resourcePrefix = 'file:///resources/';
+  const resourcePrefix = 'docs:///resources/';
 
   if (uri.startsWith(resourcePrefix)) {
     // Extract filename from URI
