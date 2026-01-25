@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   CallToolRequestSchema,
@@ -17,8 +17,8 @@ import { validateTranslations } from './validate_translations.js';
 // Enhanced progress callback type
 type ProgressCallback = (message: string, currentStep?: number, totalSteps?: number) => void;
 
-// 1. Initialize the server
-const server = new Server(
+// 1. Initialize the mcp
+const mcp = new McpServer(
   {
     name: 'participants-mcp-server',
     version: '1.0.0',
@@ -32,7 +32,7 @@ const server = new Server(
 );
 
 // 2. Define available tools
-server.setRequestHandler(ListToolsRequestSchema, async () => {
+mcp.server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
@@ -86,7 +86,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 // 3. Define available resources (markdown documentation files)
-server.setRequestHandler(ListResourcesRequestSchema, async () => {
+mcp.server.setRequestHandler(ListResourcesRequestSchema, async () => {
   try {
     return {
       resources: [{
@@ -103,7 +103,7 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
 });
 
 // 4. Implement resource reading logic
-server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+mcp.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const uri = request.params.uri;
   const resourcePrefix = 'docs:///resources/';
 
@@ -139,14 +139,14 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
 });
 
 // 5. Implement the tool logic
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+mcp.server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const progressToken = request.params._meta?.progressToken;
 
   // Create enhanced progress callback
   const onProgress: ProgressCallback | undefined = progressToken !== undefined
     ? (message: string, currentStep?: number, totalSteps?: number) => {
       const progress = currentStep && totalSteps ? Math.round((currentStep / totalSteps) * 100) : undefined;
-      server.notification({
+      mcp.server.notification({
         method: 'notifications/progress',
         params: {
           progressToken,
@@ -176,6 +176,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   throw new Error('Tool not found');
 });
 
-// 6. Start the server using Standard Input/Output (stdio)
+// 6. Start the mcp using Standard Input/Output (stdio)
 const transport = new StdioServerTransport();
-await server.connect(transport);
+await mcp.connect(transport);
