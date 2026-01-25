@@ -43,7 +43,7 @@ export async function validateTranslations(
   fileContent: string,
   filePath: string,
   onProgress?: ProgressCallback,
-): Promise<{ content: Array<{ type: string; text: string }> }> {
+): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
   const totalSteps = 5;
 
   try {

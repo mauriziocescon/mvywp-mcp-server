@@ -54,7 +54,7 @@ function runCommand(
 export async function setupEnvironmentForParticipants(
   projectPath: string,
   onProgress?: ProgressCallback,
-): Promise<{ content: Array<{ type: string; text: string }> }> {
+): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
   try {
     // Verify the project path exists
     if (onProgress) onProgress('🔍 Verifying project path...', 0, 4);

@@ -7,7 +7,7 @@ type ProgressCallback = (message: string, currentStep?: number, totalSteps?: num
 export async function updateDependencies(
   projectPath: string,
   onProgress?: ProgressCallback,
-): Promise<{ content: Array<{ type: string; text: string }> }> {
+): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
   try {
     // Verify the project path exists
     if (onProgress) onProgress('🔍 Verifying project path...', 1, 3);
