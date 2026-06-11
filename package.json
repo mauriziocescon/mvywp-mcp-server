@@ -27,11 +27,11 @@
     }
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
-    "@compodoc/compodoc": "1.1.32"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@compodoc/compodoc": "1.2.1"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3",
-    "typescript": "^5.0.0"
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3"
   }
 }
