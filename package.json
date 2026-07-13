@@ -1,7 +1,7 @@
 {
   "name": "mywp-mcp-server",
   "version": "1.0.0",
-  "description": "An mcp server for mywp",
+  "description": "Demo MCP server with custom development tools",
   "author": "Maurizio Cescon <maurizio.cescon@gmail.com>",
   "homepage": "https://be.linkedin.com/in/mauriziocescon",
   "private": false,
